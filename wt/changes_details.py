@@ -1,5 +1,7 @@
 import xlwt as xlwt
 
+from rd.trip_details import TripDetails
+
 
 def wt_head(sheet):
     style = st_style()
@@ -97,17 +99,17 @@ def wt_title(sheet, title='差　旅　费　报　销　明  细'):
 
 def wt_floor(sheet, line_num=5):
     style = st_style()
-    sheet.write_merge(line_num + 1, line_num + 1, 0, 8, '合计', style)
+    sheet.write_merge(line_num, line_num, 0, 8, '合计', style)
 
-    sheet.write(line_num + 1, 9, xlwt.Formula('SUM(J5:J' + str(line_num) + ')'), style)
-    sheet.write(line_num + 1, 10, '', style)
-    sheet.write(line_num + 1, 11, '', style)
-    sheet.write(line_num + 1, 12, '', style)
+    sheet.write(line_num, 9, xlwt.Formula('SUM(J5:J' + str(line_num) + ')'), style)
+    sheet.write(line_num, 10, '', style)
+    sheet.write(line_num, 11, '', style)
+    sheet.write(line_num, 12, '', style)
 
-    sheet.write(line_num + 1, 13, '', style)
-    sheet.write(line_num + 1, 14, '', style)
-    sheet.write(line_num + 1, 15, '', style)
-    sheet.write(line_num + 1, 16, xlwt.Formula('SUM(Q5:Q' + str(line_num) + ')'), style)
+    sheet.write(line_num, 13, '', style)
+    sheet.write(line_num, 14, '', style)
+    sheet.write(line_num , 15, '', style)
+    sheet.write(line_num , 16, xlwt.Formula('SUM(Q5:Q' + str(line_num) + ')'), style)
 
     # 报销总额(单位：元）
     style1 = st_style()
@@ -117,17 +119,61 @@ def wt_floor(sheet, line_num=5):
     font.bold = True  # 黑体
     style1.font = font
 
-    sheet.write_merge(line_num + 2, line_num + 3, 0, 6, '报销总额(单位：元）', style1)
-    sheet.write_merge(line_num + 2, line_num + 2, 7, 8, '人民币', style)
+    sheet.write_merge(line_num + 1, line_num + 2, 0, 6, '报销总额(单位：元）', style1)
+    sheet.write_merge(line_num + 1, line_num + 1, 7, 8, '人民币', style)
+
+    sheet.write_merge(line_num + 1, line_num + 1, 9, 16, xlwt.Formula(
+        'SUM(J' + str(line_num+1) + ',M' + str(line_num+1) + ',Q' + str(line_num+1) + ')'), style1)
+
+    sheet.write_merge(line_num + 2, line_num + 2, 7, 8, '(大写)', style)
 
     sheet.write_merge(line_num + 2, line_num + 2, 9, 16, xlwt.Formula(
         'SUM(J' + str(line_num + 1) + ',M' + str(line_num + 1) + ',Q' + str(line_num + 1) + ')'), style1)
 
-    sheet.write_merge(line_num + 3, line_num + 3, 7, 8, '(大写)', style)
+
+def ts_time(time):
+    _time = time[0:2]
+    a = int(_time)
+    if 0 <= a <= 6:
+        return "凌晨"
+    elif 6 < a <= 12:
+        return "上午"
+    elif 12 < a <= 13:
+        return "中午"
+    elif 13 < a <= 18:
+        return "下午"
+    else:
+        return "晚上" if 18 < a <= 24 else "上午"
 
 
-    sheet.write_merge(line_num + 3, line_num + 3, 9, 16, xlwt.Formula(
-        'SUM(J' + str(line_num + 2) + ',M' + str(line_num + 2) + ',Q' + str(line_num + 2) + ')'), style1)
+def assemble_row(data):
+    row = []
+
+    segment_time = data[2]
+
+    row.append(segment_time[0:2])
+    row.append(segment_time[3:5])
+    row.append(ts_time(segment_time[6:11]))
+    row.append(data[4])
+
+    row.append(segment_time[0:2])
+    row.append(segment_time[3:5])
+    row.append(ts_time(segment_time[6:11]))
+    row.append(data[5])
+
+    row.append(u'滴滴打车')
+    row.append(float(data[7]))
+
+    row.append(None)
+    row.append(None)
+    row.append(None)
+    row.append(None)
+    row.append(None)
+    row.append(None)
+    row.append(None)
+
+    return row
+
 
 class ChangesDetails:
 
@@ -147,7 +193,9 @@ class ChangesDetails:
         wt_head(ws)
 
         for _r in range(len(data)):
-            row = data[_r]
+
+            row = assemble_row(data[_r])
+
             for _c in range(len(row)):
                 column = row[_c]
                 ws.write(_r + 4, _c, column, style)
@@ -159,6 +207,5 @@ class ChangesDetails:
 
 if __name__ == '__main__':
     cd = ChangesDetails()
-
-    data = [['a', 'b', 'c'], ['a1', 'b1', 'c1']]
-    cd.wt_data(data, 'Excel_test.xls')
+    trip = TripDetails('1.pdf')
+    cd.wt_data(trip.extract_tables(), 'Excel_test.xls')
