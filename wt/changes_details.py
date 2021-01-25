@@ -1,4 +1,6 @@
 import xlwt as xlwt
+import time
+import os
 
 from rd.trip_details import TripDetails
 
@@ -108,8 +110,8 @@ def wt_floor(sheet, line_num=5):
 
     sheet.write(line_num, 13, '', style)
     sheet.write(line_num, 14, '', style)
-    sheet.write(line_num , 15, '', style)
-    sheet.write(line_num , 16, xlwt.Formula('SUM(Q5:Q' + str(line_num) + ')'), style)
+    sheet.write(line_num, 15, '', style)
+    sheet.write(line_num, 16, xlwt.Formula('SUM(Q5:Q' + str(line_num) + ')'), style)
 
     # 报销总额(单位：元）
     style1 = st_style()
@@ -123,7 +125,7 @@ def wt_floor(sheet, line_num=5):
     sheet.write_merge(line_num + 1, line_num + 1, 7, 8, '人民币', style)
 
     sheet.write_merge(line_num + 1, line_num + 1, 9, 16, xlwt.Formula(
-        'SUM(J' + str(line_num+1) + ',M' + str(line_num+1) + ',Q' + str(line_num+1) + ')'), style1)
+        'SUM(J' + str(line_num + 1) + ',M' + str(line_num + 1) + ',Q' + str(line_num + 1) + ')'), style1)
 
     sheet.write_merge(line_num + 2, line_num + 2, 7, 8, '(大写)', style)
 
@@ -144,6 +146,22 @@ def ts_time(time):
         return "下午"
     else:
         return "晚上" if 18 < a <= 24 else "上午"
+
+
+def list_files(dirname):
+    result = []  # 所有的文件
+
+    for maindir, subdir, file_name_list in os.walk(dirname):
+
+        print("1:", maindir)  # 当前主目录
+        print("2:", subdir)  # 当前主目录下的所有目录
+        print("3:", file_name_list)  # 当前主目录下的所有文件
+
+        for filename in file_name_list:
+            apath = os.path.join(maindir, filename)  # 合并成一个完整路径
+            result.append(apath)
+
+    return result
 
 
 def assemble_row(data):
@@ -207,5 +225,11 @@ class ChangesDetails:
 
 if __name__ == '__main__':
     cd = ChangesDetails()
-    trip = TripDetails('1.pdf')
-    cd.wt_data(trip.extract_tables(), 'Excel_test.xls')
+    data=[]
+    pdfs = list_files(os.curdir + '/inputs')
+
+    for pdf in pdfs:
+        trip = TripDetails(pdf)
+        data.extend(trip.extract_tables())
+    ts = time.strftime("%Y%m%d", time.localtime())
+    cd.wt_data(data, '报销明细' + ts + '.xls')
