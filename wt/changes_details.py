@@ -225,7 +225,7 @@ class ChangesDetails:
 
 if __name__ == '__main__':
     cd = ChangesDetails()
-    data=[]
+    data = []
     pdfs = list_files(os.curdir + '/inputs')
 
     for pdf in pdfs:
