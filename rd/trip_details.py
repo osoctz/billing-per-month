@@ -7,7 +7,7 @@ class TripDetails:
         self.path = path
 
     def extract_tables(self):
-        data = [];
+        data = []
         pdf = pdfplumber.open(self.path)
 
         for page in pdf.pages:
