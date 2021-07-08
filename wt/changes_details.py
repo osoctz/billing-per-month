@@ -1,24 +1,27 @@
 import xlwt as xlwt
 import time
 import os
+import sys
+import win32api, win32con
 
 from rd.trip_details import TripDetails
+import config
 
 
 def wt_head(sheet):
     style = st_style()
 
     sheet.write(1, 0, '单位:', style)
-    sheet.write_merge(1, 1, 1, 3, 'xx', style)
+    sheet.write_merge(1, 1, 1, 3, config.get_base('company'), style)
 
     sheet.write(1, 4, '部门:', style)
-    sheet.write_merge(1, 1, 5, 7, 'xxx', style)
+    sheet.write_merge(1, 1, 5, 7,config.get_base('dept'), style)
 
     sheet.write(1, 8, '姓名:', style)
-    sheet.write_merge(1, 1, 9, 10, 'xx', style)
+    sheet.write_merge(1, 1, 9, 10,config.get_base('uname'), style)
 
     sheet.write_merge(1, 1, 11, 12, '出差事由:', style)
-    sheet.write_merge(1, 1, 13, 16, 'xxx', style)
+    sheet.write_merge(1, 1, 13, 16,config.get_base('reason'), style)
 
     sheet.write_merge(2, 2, 0, 3, '出发', style)
     sheet.write_merge(2, 2, 4, 7, '到达', style)
@@ -153,10 +156,9 @@ def list_files(dirname):
 
     for maindir, subdir, file_name_list in os.walk(dirname):
 
-        print("1:", maindir)  # 当前主目录
-        print("2:", subdir)  # 当前主目录下的所有目录
-        print("3:", file_name_list)  # 当前主目录下的所有文件
-
+        # print("1:", maindir)  # 当前主目录
+        # print("2:", subdir)  # 当前主目录下的所有目录
+        # print("3:", file_name_list)  # 当前主目录下的所有文件
         for filename in file_name_list:
             apath = os.path.join(maindir, filename)  # 合并成一个完整路径
             result.append(apath)
@@ -179,7 +181,7 @@ def assemble_row(data):
     row.append(ts_time(segment_time[6:11]))
     row.append(data[5])
 
-    row.append(u'滴滴打车')
+    row.append(config.get_ext('provider'))
     row.append(float(data[7]))
 
     row.append(None)
@@ -227,6 +229,10 @@ if __name__ == '__main__':
     cd = ChangesDetails()
     data = []
     pdfs = list_files(os.curdir + '/inputs')
+
+    if len(pdfs) == 0:
+        win32api.MessageBox(0, u'inputs目录下没有行程单', "警告", win32con.MB_ICONWARNING)
+        sys.exit(1)
 
     for pdf in pdfs:
         trip = TripDetails(pdf)
